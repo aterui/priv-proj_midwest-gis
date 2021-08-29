@@ -14,10 +14,10 @@ pacman::p_load(raster,
 
 albers_mask <- st_read("data_gis/albers_huc2_zone4_7.gpkg") 
 
-albers_mask_buff500 <- st_buffer(albers_mask,
-                                 dist = 500)
+albers_mask_buff <- st_buffer(albers_mask,
+                              dist = 15000)
 
-wgs84_mask_buff500 <- st_transform(albers_mask_buff500,
+wgs84_mask_buff <- st_transform(albers_mask_buff,
                                    crs = 4326)
 
 
@@ -30,7 +30,8 @@ g1wbm <- list.files("data_org_g1wb",
 
 g1wbm_merge <- do.call(what = merge,
                        args = g1wbm) %>% 
-  crop(y = extent(wgs84_mask_buff500))
+  crop(y = extent(wgs84_mask_buff)) %>% 
+  mask(mask = wgs84_mask_buff)
 
 
 # raster to polygon -------------------------------------------------------
@@ -43,7 +44,7 @@ g1wbm_merge <- calc(g1wbm_merge,
 #            format = "GTiff",
 #            overwrite = TRUE)
 
-g1wbm_merge <- raster("data_gis/epsg4326_g1wbm.tif")
+#g1wbm_merge <- raster("data_gis/epsg4326_g1wbm.tif")
 
 g1wbm_polygon <- st_as_stars(g1wbm_merge) %>% 
   st_as_sf(merge = TRUE,
