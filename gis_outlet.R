@@ -24,11 +24,16 @@ albers_channel5k <- st_read("data_gis/epsg4326_channel_5ksqkm_buff100.gpkg") %>%
 # outlet line -------------------------------------------------------------
 
 ## remove overlapping parts 
-albers_mask_layer <- st_union(x = albers_channel5k,
-                              y = albers_g1wbm) %>% 
+albers_mask_polygon <- st_union(x = albers_channel5k,
+                                y = albers_g1wbm) %>% 
   smoothr::fill_holes(threshold = units::set_units(1000, km^2))
 
-albers_mask_outline <- st_cast(albers_mask_layer,
+st_write(albers_mask_polygon,
+         dsn = "data_gis/albers_mask_polygon.gpkg",
+         append = FALSE)
+
+## convert polygons to lines
+albers_mask_outline <- st_cast(albers_mask_polygon,
                                to = "MULTILINESTRING") %>% 
   st_union()
 
@@ -44,7 +49,7 @@ albers_channel <- st_read(dsn = "data_gis",
                           layer = "epsg4326_channel_1sqkm") %>%
   dplyr::select(NULL) %>% 
   dplyr::mutate(lineID = seq_len(nrow(.))) %>% 
-  st_transform(crs = wkt_jgd_albers)
+  st_transform(crs = 5070)
 
 albers_mask_outline <- st_read(dsn = "data_gis/albers_mask_outline.gpkg") %>%
   dplyr::select(NULL)
@@ -54,19 +59,19 @@ x <- st_intersects(albers_channel,
                    albers_mask_outline,
                    sparse = FALSE)
 
-albers_outlet <- st_intersection(albers_channel[x,], albers_mask_outline)  
-albers_outlet <- albers_outlet %>%
-  mutate(gtype = st_geometry_type(.))
+albers_outlet <- st_intersection(albers_channel[x,],
+                                 albers_mask_outline) %>% 
+  dplyr::mutate(gtype = st_geometry_type(.))
 
 ## outlet  
 albers_outlet_cast <- filter(albers_outlet,
                              gtype == "MULTIPOINT") %>%
-  st_cast("POINT") %>% 
-  bind_rows(filter(albers_outlet,
-                   gtype == "POINT"))
+  st_cast(to = "POINT") %>% 
+  dplyr::bind_rows(filter(albers_outlet,
+                          gtype == "POINT"))
 
 wgs84_outlet_cast <- albers_outlet_cast %>% 
-  mutate(pointID = 1:nrow(.)) %>% 
+  dplyr::mutate(pointID = seq_len(nrow(.))) %>% 
   st_transform(crs = 4326)
 
 st_write(wgs84_outlet_cast,

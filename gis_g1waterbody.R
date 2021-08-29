@@ -38,6 +38,13 @@ g1wbm_merge <- do.call(what = merge,
 g1wbm_merge <- calc(g1wbm_merge,
                     fun = function(x) ifelse(x %in% c(50, 51), 1, NA))
 
+#writeRaster(g1wbm_merge, 
+#            filename = "data_gis/epsg4326_g1wbm",
+#            format = "GTiff",
+#            overwrite = TRUE)
+
+g1wbm_merge <- raster("data_gis/epsg4326_g1wbm.tif")
+
 g1wbm_polygon <- st_as_stars(g1wbm_merge) %>% 
   st_as_sf(merge = TRUE,
            as_points = FALSE) %>% 
@@ -53,8 +60,8 @@ albers_g1wbm_polygon <- st_transform(g1wbm_polygon,
 wgs84_g1wbm_polygon_large_buff100 <- albers_g1wbm_polygon %>% 
   dplyr::filter(area >= units::set_units(10, km^2)) %>% 
   dplyr::select(NULL) %>% 
-  rmapshaper::ms_simplify() %>%
   st_buffer(dist = 100) %>% 
+  st_union() %>% 
   st_transform(crs = 4326)
 
 st_write(wgs84_g1wbm_polygon_large_buff100,
