@@ -4,3 +4,6 @@
 .Ruserdata
 data_gis/log
 data_org*
+data_gis/epsg4326_channel_1sqkm.gpkg
+data_gis/epsg4326_channel_5ksqkm.gpkg
+data_gis/epsg4326_upa.tif
