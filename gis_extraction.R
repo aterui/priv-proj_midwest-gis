@@ -10,17 +10,6 @@ pacman::p_load(raster,
                mapview, 
                exactextractr)  
 
-# read mask layer ---------------------------------------------------------
-
-albers_mask <- st_read("data_gis/albers_huc2_zone4_7.gpkg") 
-
-albers_mask_buff <- st_buffer(albers_mask,
-                              dist = 15000)
-
-wgs84_mask_buff <- st_transform(albers_mask_buff,
-                                crs = 4326)
-
-
 # extract values ----------------------------------------------------------
 
 ## watershed polygon ####
@@ -162,7 +151,7 @@ p_branch <- albers_channel_clip_cast %>%
   dplyr::filter(wsd_id %in% wsd_id_3branch) %>% 
   dplyr::group_by(wsd_id) %>% 
   summarize(rate = fitdistrplus::fitdist(as.numeric(length), "exp")$estimate,
-            n_branch = unique(n_branch)) %>% 
+            n_branch = n()) %>% 
   mutate(p_branch = pexp(q = 1, rate = rate)) %>% 
   as_tibble() %>% 
   select(wsd_id,
@@ -188,14 +177,14 @@ albers_wsd_polygon <- albers_wsd_polygon %>%
 st_write(albers_channel_clip_cast,
          dsn = "data_gis/albers_channel.gpkg",
          append = FALSE)
-#st_write(albers_channel_clip_cast,
-#         normalizePath("../public-proj_stream-diversity/code_empirical/data_gis/albers_channel_mw.gpkg"),
-#         append = FALSE)
+st_write(albers_channel_clip_cast,
+         normalizePath("../public-proj_stream-diversity/code_empirical/data_gis/albers_channel_mw.gpkg"),
+         append = FALSE)
 
 ## watershed  
 st_write(albers_wsd_polygon,
-         "data_gis/albers_watershed_mw_final.gpkg",
+         "data_gis/albers_watershed_final.gpkg",
          append = FALSE)
-#st_write(albers_wsd_polygon,
-#         normalizePath("../public-proj_stream-diversity/code_empirical/data_gis/albers_watershed_mw_final.gpkg"),
-#         append = FALSE)
+st_write(albers_wsd_polygon,
+         normalizePath("../public-proj_stream-diversity/code_empirical/data_gis/albers_watershed_mw_final.gpkg"),
+         append = FALSE)
