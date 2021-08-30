@@ -23,30 +23,30 @@ wgs84_mask_buff <- st_transform(albers_mask_buff,
 
 # merge raster files ------------------------------------------------------
 
-## g1wbm (waterbody raster layer)
-g1wbm <- list.files("data_org_g1wb",
+## wgs84_g1wbm (waterbody raster layer)
+wgs84_g1wbm <- list.files("data_org_g1wb",
                     full.names = T) %>% 
   lapply(FUN = raster)
 
-g1wbm_merge <- do.call(what = merge,
-                       args = g1wbm) %>% 
+wgs84_g1wbm_merge <- do.call(what = merge,
+                       args = wgs84_g1wbm) %>% 
   crop(y = extent(wgs84_mask_buff)) %>% 
   mask(mask = wgs84_mask_buff)
 
 
 # raster to polygon -------------------------------------------------------
 
-g1wbm_merge <- calc(g1wbm_merge,
-                    fun = function(x) ifelse(x %in% c(50, 51), 1, NA))
+wgs84_g1wbm_merge <- calc(wgs84_g1wbm_merge,
+                          fun = function(x) ifelse(x %in% c(50, 51), 1, NA))
 
-#writeRaster(g1wbm_merge, 
+#writeRaster(wgs84_g1wbm_merge, 
 #            filename = "data_gis/epsg4326_g1wbm",
 #            format = "GTiff",
 #            overwrite = TRUE)
 
-#g1wbm_merge <- raster("data_gis/epsg4326_g1wbm.tif")
+#wgs84_g1wbm_merge <- raster("data_gis/epsg4326_g1wbm.tif")
 
-g1wbm_polygon <- st_as_stars(g1wbm_merge) %>% 
+wgs84_g1wbm_polygon <- st_as_stars(wgs84_g1wbm_merge) %>% 
   st_as_sf(merge = TRUE,
            as_points = FALSE) %>% 
   st_cast(to = "MULTIPOLYGON")
@@ -54,7 +54,7 @@ g1wbm_polygon <- st_as_stars(g1wbm_merge) %>%
 
 # select large lakes ------------------------------------------------------
 
-albers_g1wbm_polygon <- st_transform(g1wbm_polygon,
+albers_g1wbm_polygon <- st_transform(wgs84_g1wbm_polygon,
                                      crs = 5070) %>% 
   mutate(area = st_area(.))
 
