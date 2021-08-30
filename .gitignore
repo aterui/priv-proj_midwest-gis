@@ -14,3 +14,4 @@ data_gis/albers_mask_polygon.gpkg
 data_gis/albers_lu.tif
 data_gis/albers_dem.tif
 data_gis/Toolbox.tbx
+data_gis/epsg4326_g1waterbody_large_buff100.gpkg
