@@ -71,7 +71,7 @@ writeRaster(stream_grid_1sqkm,
 
 # 5000 sq km
 stream_grid_5ksqkm <- calc(upa_merge,
-                          fun = function(x) ifelse(x >= 5000, 1, NA)) %>% 
+                           fun = function(x) ifelse(x >= 5000, 1, NA)) %>% 
   mask(mask = wgs84_mask_buff)
 
 # export
