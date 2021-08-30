@@ -11,6 +11,17 @@ pacman::p_load(raster,
                exactextractr)  
 
 
+# read mask layer ---------------------------------------------------------
+
+albers_mask <- st_read("data_gis/albers_huc2_zone4_7.gpkg") 
+
+albers_mask_buff <- st_buffer(albers_mask,
+                              dist = 15000)
+
+wgs84_mask_buff <- st_transform(albers_mask_buff,
+                                crs = 4326)
+
+
 # land use ----------------------------------------------------------------
 
 # global landuse raster 100 m resl, year 2015
