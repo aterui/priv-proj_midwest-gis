@@ -38,14 +38,13 @@ albers_fua <- stack(albers_forest,
 names(albers_fua) <- c("forest", "urban", "agri")
 
 p_lu <- exact_extract(albers_fua, 
-                      albers_wsd_polygon) %>% 
-  dplyr::bind_rows(.id = "wsd_id") %>%
-  tidyr::drop_na(forest | urban | agri) %>% 
-  dplyr::mutate(wsd_id = as.numeric(wsd_id)) %>% 
-  dplyr::group_by(wsd_id) %>% 
-  dplyr::summarise(frac_forest = sum(forest * coverage_fraction) / sum(coverage_fraction),
-                   frac_urban = sum(urban * coverage_fraction) / sum(coverage_fraction),
-                   frac_agri = sum(agri * coverage_fraction) / sum(coverage_fraction))
+                      albers_wsd_polygon,
+                      "mean") %>% 
+  dplyr::as_tibble() %>% 
+  dplyr::mutate(wsd_id = as.numeric(rownames(.))) %>% 
+  dplyr::rename(frac_forest = mean.forest,
+                frac_urban = mean.urban,
+                frac_agri = mean.agri)
 
 ## climate ####
 
@@ -71,8 +70,6 @@ wgs84_dem <- raster("data_gis/epsg4326_dem.tif") # for extent
 wgs84_clim <- wgs84_clim[[c(1,12)]] %>% # extract temperature (bio1) and precipitation (bio12)
   crop(extent(wgs84_dem))
 
-names(wgs84_clim) <- c("temp", "ppt")
-
 # reprojection
 albers_clim <- projectRaster(from = wgs84_clim,
                              crs = st_crs(5070)$proj4string,
@@ -82,25 +79,25 @@ albers_clim <- projectRaster(from = wgs84_clim,
 names(albers_clim) <- c("temp", "ppt")
 
 mu_clim <- exact_extract(albers_clim, 
-                         albers_wsd_polygon) %>% 
-  dplyr::bind_rows(.id = "wsd_id") %>% 
-  tidyr::drop_na(temp | ppt) %>% 
-  dplyr::mutate(wsd_id = as.numeric(wsd_id)) %>% 
-  dplyr::group_by(wsd_id) %>% 
-  dplyr::summarise(mean_temp = sum(temp * 0.1 * coverage_fraction) / sum(coverage_fraction),
-                   mean_ppt = sum(ppt * coverage_fraction) / sum(coverage_fraction))
+                         albers_wsd_polygon,
+                         "mean") %>% 
+  dplyr::as_tibble() %>% 
+  dplyr::mutate(wsd_id = as.numeric(rownames(.)),
+                mean_temp = mean.temp * 0.1,
+                mean_ppt = mean.ppt) %>% 
+  dplyr::select(-mean.temp,
+                -mean.ppt)
 
 ## dem ####
 
 albers_dem <- raster("data_gis/albers_dem.tif")
 
 mu_dem <- exact_extract(albers_dem, 
-                        albers_wsd_polygon) %>% 
-  dplyr::bind_rows(.id = "wsd_id") %>% 
-  tidyr::drop_na(value) %>% 
-  dplyr::mutate(wsd_id = as.numeric(wsd_id)) %>% 
-  dplyr::group_by(wsd_id) %>% 
-  dplyr::summarise(mean_dem = sum(value * coverage_fraction) / sum(coverage_fraction))
+                        albers_wsd_polygon,
+                        "mean") %>% 
+  dplyr::as_tibble() %>% 
+  dplyr::mutate(wsd_id = as.numeric(rownames(.))) %>% 
+  dplyr::rename(mean_dem = value)
 
 ## dam/reservoir ####
 n_dam <- st_read(dsn = "data_org_dam",
