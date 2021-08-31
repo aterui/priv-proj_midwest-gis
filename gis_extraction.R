@@ -14,7 +14,7 @@ pacman::p_load(raster,
 
 ## watershed polygon ####
 albers_wsd_polygon <- st_read(dsn = "data_gis",
-                              layer = "epsg4326_watershed") %>%
+                              layer = "epsg4326_watershed_simple") %>%
   st_make_valid() %>% 
   st_transform(crs = 5070) %>% 
   dplyr::select(NULL) %>% 
@@ -68,7 +68,7 @@ wgs84_clim <- merge(wgs84_clim1,
                     wgs84_clim2)
 wgs84_dem <- raster("data_gis/epsg4326_dem.tif") # for extent
 
-wgs84_clim <- wgs84_clim[[c(1,12)]] %>%   # extract temperature (bio1) and precipitation (bio12)
+wgs84_clim <- wgs84_clim[[c(1,12)]] %>% # extract temperature (bio1) and precipitation (bio12)
   crop(extent(wgs84_dem))
 
 names(wgs84_clim) <- c("temp", "ppt")
@@ -118,27 +118,27 @@ n_dam <- st_read(dsn = "data_org_dam",
 
 # channel intersection with watershed polygons
 
-#albers_channel <- st_read(dsn = "data_gis",
-#                          layer = "epsg4326_channel_1sqkm") %>% 
-#  dplyr::select(NULL) %>% 
-#  st_transform(crs = 5070)
-#
-#albers_channel_clip <- albers_channel %>% 
-#  st_intersection(albers_wsd_polygon) %>% 
-#  dplyr::mutate(geom_type = st_geometry_type(.))
-#
-#albers_channel_clip_cast <- albers_channel_clip %>% 
-#  dplyr::filter(geom_type == "MULTILINESTRING") %>% 
-#  st_cast(to = "LINESTRING") %>% 
-#  dplyr::mutate(geom_type = st_geometry_type(.)) %>% 
-#  dplyr::bind_rows(dplyr::filter(albers_channel_clip,
-#                                 geom_type == "LINESTRING")) %>% 
-#  dplyr::mutate(length = units::set_units(st_length(.), km)) %>% 
-#  dplyr::filter(length >= units::set_units(1, m))
+albers_channel <- st_read(dsn = "data_gis",
+                          layer = "epsg4326_channel_1sqkm") %>% 
+  dplyr::select(NULL) %>% 
+  st_transform(crs = 5070)
+
+albers_channel_clip <- albers_channel %>% 
+  st_intersection(albers_wsd_polygon) %>% 
+  dplyr::mutate(geom_type = st_geometry_type(.))
+
+albers_channel_clip_cast <- albers_channel_clip %>% 
+  dplyr::filter(geom_type == "MULTILINESTRING") %>% 
+  st_cast(to = "LINESTRING") %>% 
+  dplyr::mutate(geom_type = st_geometry_type(.)) %>% 
+  dplyr::bind_rows(dplyr::filter(albers_channel_clip,
+                                 geom_type == "LINESTRING")) %>% 
+  dplyr::mutate(length = units::set_units(st_length(.), km)) %>% 
+  dplyr::filter(length >= units::set_units(45, m))
 
 # read channel intersected with watershed polygons
 # re-run the above script when making changes to the source files
-albers_channel_clip_cast <- st_read(dsn = "data_gis/albers_channel.gpkg")
+#albers_channel_clip_cast <- st_read(dsn = "data_gis/albers_channel.gpkg")
 
 # select watersheds with >= 3 branches
 wsd_id_3branch <- albers_channel_clip_cast %>% 
