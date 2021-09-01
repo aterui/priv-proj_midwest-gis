@@ -8,7 +8,7 @@ Akira Terui
 GIS project for watershed delineation in Midwest, USA. Note that GIS
 files could not be stored in online repository due to large file size.
 
-## R File
+## R File & Output
 
 -   `gis_channel.R` Channel network delineation based on MERIT Hydro
     (<http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_Hydro/index.html>).
@@ -34,10 +34,12 @@ files could not be stored in online repository due to large file size.
         5000 sq km plus 100 m buffer
     -   `channel_5ksqkm` Channel network with threshold value of 5000 sq
         km
-    -   `dir` Flow direction (source: MERIT Hydro)
+    -   `dir` Flow direction (source: MERIT Hydro). Passed to ArcMap
+        10.7 for watershed/channel delineation
     -   `g1waterbody_large_buff100` Lentic waterbody exceeding 10 sq km
         in area
-    -   `outlet` Outlet points
+    -   `outlet` Outlet points. Passed to ArcMap 10.7 for watershed
+        delineation
     -   `stream_grid_1sqkm` Stream grid with threshold value of 1 sq km.
         Passed to ArcMap 10.7 for channel network delineation.
     -   `stream_grid_5ksqkm` Stream grid with threshold value of 5000 sq
