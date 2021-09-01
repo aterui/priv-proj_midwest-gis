@@ -5,7 +5,8 @@ Akira Terui
 
 ## Description
 
-GIS project for watershed delineation in Midwest, USA.
+GIS project for watershed delineation in Midwest, USA. Note that GIS
+files could not be stored in online repository due to large file size.
 
 ## R File
 
