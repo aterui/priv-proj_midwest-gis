@@ -4,4 +4,6 @@
 .Ruserdata
 data_gis*
 data_org*
+*.tif
+*.gpkg
 README.Rmd
