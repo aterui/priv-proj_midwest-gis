@@ -54,14 +54,14 @@ wgs84_clim1 <- getData("worldclim",
                        res = 0.5,
                        lon = -119,
                        lat = 31,
-                       path = here::here("data_org_wc"))
+                       path = here::here("data_source/data_org_wc"))
 
 wgs84_clim2 <- getData("worldclim",
                        var = "bio",
                        res = 0.5,
                        lon = -89,
                        lat = 31,
-                       path = here::here("data_org_wc"))
+                       path = here::here("data_source/data_org_wc"))
 
 wgs84_clim <- merge(wgs84_clim1, 
                     wgs84_clim2)
@@ -100,7 +100,7 @@ mu_dem <- exact_extract(albers_dem,
   dplyr::rename(mean_dem = value)
 
 ## dam/reservoir ####
-n_dam <- st_read(dsn = "data_org_dam",
+n_dam <- st_read(dsn = "data_source/data_org_dam",
                  layer = "GRanD_dams_v1_1",
                  crs = 4326) %>% 
   st_transform(crs = 5070) %>% 

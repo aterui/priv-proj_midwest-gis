@@ -24,7 +24,7 @@ wgs84_mask_buff <- st_transform(albers_mask_buff,
 # merge raster files ------------------------------------------------------
 
 ## wgs84_g1wbm (waterbody raster layer)
-wgs84_g1wbm <- list.files("data_org_g1wb",
+wgs84_g1wbm <- list.files("data_source/data_org_g1wb",
                     full.names = T) %>% 
   lapply(FUN = raster)
 

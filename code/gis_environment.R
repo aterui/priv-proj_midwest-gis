@@ -26,7 +26,7 @@ wgs84_mask_buff <- st_transform(albers_mask_buff,
 
 # global landuse raster 100 m resl, year 2015
 
-wgs84_lu <- list.files("data_org_lu",
+wgs84_lu <- list.files("data_source/data_org_lu",
                        full.names = T) %>% 
   lapply(FUN = raster)
 
@@ -56,7 +56,7 @@ writeRaster(albers_lu,
 # elevation ---------------------------------------------------------------
 
 # Adjusted DEM from MERIT Hydro
-wgs84_dem <- list.files("data_org_dem",
+wgs84_dem <- list.files("data_source/data_org_dem",
                         full.names = T) %>% 
   lapply(FUN = raster)
 
