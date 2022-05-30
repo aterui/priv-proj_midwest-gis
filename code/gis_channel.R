@@ -2,12 +2,9 @@
 # setup -------------------------------------------------------------------
 
 rm(list = ls(all.names = T))
-pacman::p_load(raster,
-               rgdal,
-               tidyverse,
-               sf,
-               stars,
-               mapview)  
+source("code/library.R")
+source("code/function_arc2d8.R")
+
 
 # read mask layer ---------------------------------------------------------
 
@@ -24,7 +21,7 @@ wgs84_mask_buff <- st_transform(albers_mask_buff,
 # merge raster files ------------------------------------------------------
 
 ## upstream watershed area (MERIT dem)
-upa <- list.files("data_org_upa",
+upa <- list.files("data_source/data_org_upa",
                   full.names = T) %>% 
   lapply(FUN = raster)
 
@@ -33,63 +30,101 @@ upa_merge <- do.call(what = merge,
   crop(y = extent(wgs84_mask_buff))
 
 writeRaster(upa_merge,
-            filename = "data_gis/epsg4326_upa",
+            filename = "data_fmt/epsg4326_upa",
             format = "GTiff",
             overwrite = TRUE)  
 
+
 ## flow direction
-fdir <- list.files("data_org_dir",
+fdir <- list.files("data_source/data_org_dir",
                    full.names = T) %>% 
   lapply(FUN = raster)
 
 fdir_merge <- do.call(what = merge,
-                     args = fdir) %>% 
+                      args = fdir) %>% 
   crop(y = extent(wgs84_mask_buff)) %>% 
   mask(mask = wgs84_mask_buff)
 
-writeRaster(fdir_merge,
-            filename = "data_gis/epsg4326_dir",
+fdir_d8_merge <- arc2d8(fdir_merge)
+
+writeRaster(fdir_d8_merge,
+            filename = "data_fmt/epsg4326_dir_d8",
             format = "GTiff",
             overwrite = TRUE)  
+
 
 # stream network ----------------------------------------------------------
 
-# grid stream networks passed to ArcGIS for "Stream to Feature"
-# SAGA GIS returns inaccurate stream networks
+## source raster - upstream catchment area
+upa_merge <- raster("data_fmt/epsg4326_upa.tif")
 
-# binary stream network
-# 1 sq km
-stream_grid_1sqkm <- calc(upa_merge,
-                          fun = function(x) ifelse(x >= 1, 1, NA)) %>% 
-  mask(mask = wgs84_mask_buff)
+## temporary files
+upa_name <- paste0(tempdir(), "\\upa.tif")
+str_name <- paste0(tempdir(), "\\str.tif")
+v_str_name <- paste0(tempdir(), "\\str.shp")
 
-# export
-writeRaster(stream_grid_1sqkm,
-            filename = "data_gis/epsg4326_stream_grid_1sqkm",
+writeRaster(upa_merge,
+            filename = upa_name,
             format = "GTiff",
             overwrite = TRUE)  
 
-# 5000 sq km
-stream_grid_5ksqkm <- calc(upa_merge,
-                           fun = function(x) ifelse(x >= 5000, 1, NA)) %>% 
-  mask(mask = wgs84_mask_buff)
+## binary stream network, 1 sq km
+### extract grid streams
+whitebox::wbt_extract_streams(flow_accum = upa_name,
+                              output = str_name,
+                              threshold = 1)
 
-# export
-writeRaster(stream_grid_5ksqkm,
-            filename = "data_gis/epsg4326_stream_grid_5ksqkm",
+### vectorize streams
+whitebox::wbt_raster_streams_to_vector(streams = str_name,
+                                       d8_pntr = "data_fmt/epsg4326_dir_d8.tif",
+                                       output = v_str_name)
+
+### export - raster
+r_str_1sqkm <- raster(str_name)
+
+writeRaster(str_1sqkm,
+            filename = "data_fmt/epsg4326_stream_grid_1sqkm",
             format = "GTiff",
             overwrite = TRUE)  
+
+### export - vector
+v_str_1sqkm <- st_read(dsn = str_remove(v_str_name, "\\\\str.shp"),
+                       layer = "str",
+                       drivers = "ESRI Shapefile") %>% 
+  st_set_crs(4326)
+
+saveRDS(v_str_1sqkm, file = "data_fmt/epsg4326_channel_1sqkm.rds")
+
+## binary stream network, 5000 sq km
+### extract grid streams
+whitebox::wbt_extract_streams(flow_accum = upa_name,
+                              output = str_name,
+                              threshold = 5000)
+
+### vectorize streams
+whitebox::wbt_raster_streams_to_vector(streams = str_name,
+                                       d8_pntr = "data_fmt/epsg4326_dir_d8.tif",
+                                       output = v_str_name)
+
+### export - raster
+str_5ksqkm <- raster(str_name)
+writeRaster(str_5ksqkm,
+            filename = "data_fmt/epsg4326_stream_grid_5ksqkm",
+            format = "GTiff",
+            overwrite = TRUE)  
+
+### export - vector
+v_str_5ksqkm <- st_read(dsn = str_remove(v_str_name, "\\\\str.shp"),
+                        layer = "str",
+                        drivers = "ESRI Shapefile") %>% 
+  st_set_crs(4326)
+
+saveRDS(v_str_5ksqkm, file = "data_fmt/epsg4326_channel_5ksqkm.rds")
 
 
 # buffer ------------------------------------------------------------------
 
-# read 1 sqkm channel - arc output
-wgs84_channel_1sqkm <- st_read(dsn = "data_gis",
-                               layer = "epsg4326_channel_1sqkm")
-
-# read 5k sqkm channel - arc output
-wgs84_channel_5ksqkm <- st_read(dsn = "data_gis",
-                                layer = "epsg4326_channel_5ksqkm")
+wgs84_channel_5ksqkm <- readRDS(file = "data_fmt/epsg4326_channel_5ksqkm.rds")
 
 wgs84_channel_5ksqkm_buff100 <- st_transform(wgs84_channel_5ksqkm,
                                              crs = 5070) %>% 
@@ -97,17 +132,7 @@ wgs84_channel_5ksqkm_buff100 <- st_transform(wgs84_channel_5ksqkm,
   st_union() %>% 
   st_transform(crs = 4326)
 
-
-# export
-st_write(wgs84_channel_1sqkm, 
-         dsn = "data_gis/epsg4326_channel_1sqkm.gpkg",
-         append = FALSE)
-
-st_write(wgs84_channel_5ksqkm, 
-         dsn = "data_gis/epsg4326_channel_5ksqkm.gpkg",
-         append = FALSE)
-
-st_write(wgs84_channel_5ksqkm_buff100, 
-         dsn = "data_gis/epsg4326_channel_5ksqkm_buff100.gpkg",
-         append = FALSE)
+## export
+saveRDS(wgs84_channel_5ksqkm_buff100,
+        "data_fmt/epsg4326_channel_5ksqkm_buff100.rds")
 
