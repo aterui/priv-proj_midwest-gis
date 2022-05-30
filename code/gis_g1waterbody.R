@@ -35,9 +35,9 @@ wgs84_g1wbm_merge <- calc(wgs84_g1wbm_merge,
                           fun = function(x) ifelse(x %in% c(50, 51), 1, NA))
 
 # writeRaster(wgs84_g1wbm_merge,
-#            filename = "data_fmt/epsg4326_g1wbm",
-#            format = "GTiff",
-#            overwrite = TRUE)
+#             filename = "data_fmt/epsg4326_g1wbm",
+#             format = "GTiff",
+#             overwrite = TRUE)
 
 # wgs84_g1wbm_merge <- raster("data_fmt/epsg4326_g1wbm.tif")
 
