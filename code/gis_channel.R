@@ -1,7 +1,7 @@
 
 # setup -------------------------------------------------------------------
 
-rm(list = ls(all.names = T))
+rm(list = ls())
 source("code/library.R")
 source("code/function_arc2d8.R")
 
@@ -82,7 +82,7 @@ whitebox::wbt_raster_streams_to_vector(streams = str_name,
 ### export - raster
 r_str_1sqkm <- raster(str_name)
 
-writeRaster(str_1sqkm,
+writeRaster(r_str_1sqkm,
             filename = "data_fmt/epsg4326_stream_grid_1sqkm",
             format = "GTiff",
             overwrite = TRUE)  
