@@ -34,23 +34,27 @@ wgs84_g1wbm_merge <- do.call(what = merge,
 wgs84_g1wbm_merge <- calc(wgs84_g1wbm_merge,
                           fun = function(x) ifelse(x %in% c(50, 51), 1, NA))
 
-# writeRaster(wgs84_g1wbm_merge,
-#             filename = "data_fmt/epsg4326_g1wbm",
-#             format = "GTiff",
-#             overwrite = TRUE)
+writeRaster(wgs84_g1wbm_merge,
+            filename = "data_fmt/epsg4326_g1wbm_binary",
+            format = "GTiff",
+            overwrite = TRUE)
 
-# wgs84_g1wbm_merge <- raster("data_fmt/epsg4326_g1wbm.tif")
+wgs84_g1wbm_binary <- raster("data_fmt/epsg4326_g1wbm.tif")
 
-wgs84_g1wbm_polygon <- st_as_stars(wgs84_g1wbm_merge) %>% 
+## this code is too slow for large data
+wgs84_g1wbm_polygon <- st_as_stars(wgs84_g1wbm_binary) %>%
   st_as_sf(merge = TRUE,
-           as_points = FALSE) %>% 
+           as_points = FALSE) %>%
   st_cast(to = "MULTIPOLYGON")
+
+saveRDS(wgs84_g1wbm_polygon,
+        file = "data_fmt/epsg4326_g1wbm_polygon.rds")
 
 
 # select large lakes ------------------------------------------------------
 
-albers_g1wbm_polygon <- st_transform(wgs84_g1wbm_polygon,
-                                     crs = 5070) %>% 
+albers_g1wbm_polygon <- readRDS("data_fmt/epsg4326_g1wbm_polygon.rds") %>% 
+  st_transform(crs = 5070) %>% 
   mutate(area = st_area(.))
 
 wgs84_g1wbm_polygon_large_buff100 <- albers_g1wbm_polygon %>% 
