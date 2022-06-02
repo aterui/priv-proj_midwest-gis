@@ -6,4 +6,5 @@ data_gis*
 data_org*
 *.tif
 *.gpkg
+data_fmt/whitebox
 README.Rmd
