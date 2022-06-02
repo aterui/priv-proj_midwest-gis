@@ -3,4 +3,9 @@ pacman::p_load(tidyverse,
                sf,
                stars,
                whitebox,
-               mapview)  
+               mapview,
+               future.apply,
+               parallel,
+               tictoc,
+               doParallel,
+               doSNOW)  
