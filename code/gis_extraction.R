@@ -1,14 +1,52 @@
 
 # setup -------------------------------------------------------------------
 
-rm(list = ls(all.names = T))
-pacman::p_load(raster,
-               rgdal, 
-               tidyverse, 
-               sf, 
-               stars, 
-               mapview, 
-               exactextractr)  
+rm(list = ls())
+source("code/library.R")
+
+
+# watershed delineation ---------------------------------------------------
+
+## save input files to tempdir
+
+shp <- paste(tempdir(), "temp.shp", sep = "\\")
+tif <- sapply(1:2, function(i) paste0(tempdir(), "\\temp", i, ".tif"))
+
+st_read(dsn = here::here("data_fmt/whitebox"),
+        layer = "epsg4326_outlet",
+        drivers = "ESRI Shapefile") %>% 
+  st_write(shp, append = F)
+
+raster(here::here("data_fmt/epsg4326_dir_d8.tif")) %>% 
+  writeRaster(filename = tif[1],
+              overwrite = TRUE)
+
+wbt_watershed(d8_pntr = tif[1],
+              pour_pts = shp,
+              output = tif[2])
+
+wgs84_wsd_polygon <- raster(tif[2]) %>% 
+  st_as_stars() %>% 
+  st_as_sf(merge = TRUE,
+           as_point = FALSE) %>% 
+  rmapshaper::ms_simplify(keep = 0.4) %>% 
+  st_make_valid()
+
+## export
+
+st_write(wgs84_wsd_polygon,
+         here::here("data_fmt/epsg4326_watershed.gpkg"),
+         append = FALSE)
+
+raster(tif[2]) %>% 
+  writeRaster(filename = here::here("data_fmt/whitebox/epsg4326_watershed.tif"),
+              overwrite = TRUE)
+
+## remove temporary files
+list.files(path = str_remove(shp, "\\\\temp.shp"),
+           full.names = T) %>% 
+  file.remove()
+
 
 # extract values ----------------------------------------------------------
 
