@@ -42,8 +42,7 @@ fdir <- list.files("data_source/data_org_dir",
 
 fdir_merge <- do.call(what = merge,
                       args = fdir) %>% 
-  crop(y = extent(wgs84_mask_buff)) %>% 
-  mask(mask = wgs84_mask_buff)
+  crop(y = extent(wgs84_mask_buff))
 
 fdir_d8_merge <- arc2d8(fdir_merge)
 
@@ -91,7 +90,8 @@ writeRaster(r_str_1sqkm,
 v_str_1sqkm <- st_read(dsn = str_remove(v_str_name, "\\\\str.shp"),
                        layer = "str",
                        drivers = "ESRI Shapefile") %>% 
-  st_set_crs(4326)
+  st_set_crs(4326) %>% 
+  st_intersection(wgs84_mask_buff)
 
 saveRDS(v_str_1sqkm, file = "data_fmt/epsg4326_channel_1sqkm.rds")
 
@@ -117,7 +117,8 @@ writeRaster(str_5ksqkm,
 v_str_5ksqkm <- st_read(dsn = str_remove(v_str_name, "\\\\str.shp"),
                         layer = "str",
                         drivers = "ESRI Shapefile") %>% 
-  st_set_crs(4326)
+  st_set_crs(4326) %>% 
+  st_intersection(wgs84_mask_buff)
 
 saveRDS(v_str_5ksqkm, file = "data_fmt/epsg4326_channel_5ksqkm.rds")
 
