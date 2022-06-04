@@ -34,6 +34,9 @@ wgs84_wsd_polygon <- raster(tif[2]) %>%
 
 ## export
 
+saveRDS(wgs84_wsd_polygon,
+        file = here::here("data_fmt/epsg4326_watershed.rds"))
+
 st_write(wgs84_wsd_polygon,
          here::here("data_fmt/epsg4326_watershed.gpkg"),
          append = FALSE)
@@ -51,17 +54,19 @@ list.files(path = str_remove(shp, "\\\\temp.shp"),
 # extract values ----------------------------------------------------------
 
 ## watershed polygon ####
-albers_wsd_polygon <- st_read(dsn = "data_gis",
-                              layer = "epsg4326_watershed_simple") %>%
+albers_wsd_polygon <- readRDS(here::here("data_fmt/epsg4326_watershed.rds")) %>%
   st_make_valid() %>% 
   st_transform(crs = 5070) %>% 
   dplyr::select(NULL) %>% 
-  dplyr::mutate(wsd_id = seq_len(nrow(.))) %>%
-  dplyr::mutate(area = st_area(.)) %>% 
-  dplyr::mutate(area = units::set_units(area, km^2))
+  dplyr::mutate(wsd_id = seq_len(nrow(.)),
+                area = st_area(.),
+                area = round(units::set_units(area, km^2), 1))
 
 ## land use ####
+## NCLD data - 30 m resolution, US only
 
+
+## Compernicus data - 100 resolution, global
 albers_lu <- raster("data_gis/albers_lu.tif")
 
 albers_forest <- calc(albers_lu, 
@@ -73,16 +78,17 @@ albers_agri <- calc(albers_lu,
 albers_fua <- stack(albers_forest, 
                     albers_urban, 
                     albers_agri)
+
 names(albers_fua) <- c("forest", "urban", "agri")
 
 p_lu <- exact_extract(albers_fua, 
                       albers_wsd_polygon,
-                      "mean") %>% 
+                      "mean",
+                      append_cols = T) %>% 
   dplyr::as_tibble() %>% 
-  dplyr::mutate(wsd_id = as.numeric(rownames(.))) %>% 
-  dplyr::rename(frac_forest = mean.forest,
-                frac_urban = mean.urban,
-                frac_agri = mean.agri)
+  dplyr::rename(frac_forest_copernics = mean.forest,
+                frac_urban_copernics = mean.urban,
+                frac_agri_copernics = mean.agri)
 
 ## climate ####
 
