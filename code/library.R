@@ -8,4 +8,5 @@ pacman::p_load(tidyverse,
                parallel,
                tictoc,
                doParallel,
-               doSNOW)  
+               doSNOW,
+               terra)  
