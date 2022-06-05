@@ -4,9 +4,9 @@ pacman::p_load(tidyverse,
                stars,
                whitebox,
                mapview,
-               future.apply,
                parallel,
                tictoc,
                doParallel,
                doSNOW,
-               terra)  
+               terra,
+               exactextractr)  
