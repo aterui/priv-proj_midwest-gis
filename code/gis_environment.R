@@ -39,21 +39,34 @@ albers_lu <- terra::project(x = wgs84_lu,
                             y = "epsg:5070",
                             method = "near")
 
-terra::writeRaster(albers_lu, 
-                   filename = "data_fmt/albers_lu.tif", 
-                   overwrite = TRUE)
+albers_fua <- c(app(albers_lu, fun = function(x) ifelse(dplyr::between(x, 111, 126), 1, 0)),
+                app(albers_lu, fun = function(x) ifelse(x == 50, 1, 0)),
+                app(albers_lu, fun = function(x) ifelse(x == 40, 1, 0)))
+
+names(albers_fua) <- c("forest_100l", "urban_100l", "agri_100l")
+
+writeRaster(x = albers_fua,
+            filename = "data_fmt/albers_lu_binary.tif",
+            overwrite = TRUE)
 
 ## NCLD
 ## US only raster 30 m resl, year 2016
-wgs84_nlcd <- terra::rast(here::here("data_source/data_org_lu/epsg4326_nlcd_clip.tif"))
+albers_nlcd_usgs <- terra::rast(here::here("data_source/data_org_lu/albers_nlcd.tif")) %>% 
+  terra::crop(y = terra::ext(albers_mask_buff))
 
-albers_nlcd <- terra::project(x = wgs84_nlcd,
-                              y = "epsg:5070",
-                              method = "near")
+albers_nlcd <- project(x = albers_nlcd_usgs,
+                       y = "epsg:5070",
+                       method = "near")
 
-terra::writeRaster(albers_nlcd, 
-                   filename = "data_fmt/albers_nlcd.tif", 
-                   overwrite = TRUE)
+albers_fua_nlcd <- c(app(albers_nlcd, fun = function(x) ifelse(dplyr::between(x, 41, 43), 1, 0)),
+                     app(albers_nlcd, fun = function(x) ifelse(dplyr::between(x, 21, 24), 1, 0)),
+                     app(albers_nlcd, fun = function(x) ifelse(dplyr::between(x, 81, 82), 1, 0)))
+
+names(albers_fua_nlcd) <- c("forest_30l", "urban_30l", "agri_30l")
+
+writeRaster(x = albers_fua_nlcd,
+            filename = "data_fmt/albers_nlcd_binary.tif",
+            overwrite = TRUE)
 
 
 # elevation ---------------------------------------------------------------
