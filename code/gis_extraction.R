@@ -17,15 +17,15 @@ st_read(dsn = here::here("data_fmt/whitebox"),
         drivers = "ESRI Shapefile") %>% 
   st_write(shp, append = F)
 
-raster(here::here("data_fmt/epsg4326_dir_d8.tif")) %>% 
-  writeRaster(filename = tif[1],
-              overwrite = TRUE)
+terra::rast(here::here("data_fmt/epsg4326_dir_d8.tif")) %>% 
+  terra::writeRaster(filename = tif[1],
+                     overwrite = TRUE)
 
 wbt_watershed(d8_pntr = tif[1],
               pour_pts = shp,
               output = tif[2])
 
-wgs84_wsd_polygon <- raster(tif[2]) %>% 
+wgs84_wsd_polygon <- terra::rast(tif[2]) %>% 
   st_as_stars() %>% 
   st_as_sf(merge = TRUE,
            as_point = FALSE) %>% 
@@ -41,9 +41,9 @@ st_write(wgs84_wsd_polygon,
          here::here("data_fmt/epsg4326_watershed.gpkg"),
          append = FALSE)
 
-raster(tif[2]) %>% 
-  writeRaster(filename = here::here("data_fmt/whitebox/epsg4326_watershed.tif"),
-              overwrite = TRUE)
+terra::rast(tif[2]) %>% 
+  terra::writeRaster(filename = here::here("data_fmt/whitebox/epsg4326_watershed.tif"),
+                     overwrite = TRUE)
 
 ## remove temporary files
 list.files(path = str_remove(shp, "\\\\temp.shp"),
@@ -53,10 +53,16 @@ list.files(path = str_remove(shp, "\\\\temp.shp"),
 
 # extract values ----------------------------------------------------------
 
+## boundary layer ####
+albers_mask_buffer <- st_read(here::here("data_source/albers_huc2_zone4_7.gpkg")) %>% 
+  st_buffer(dist = 15000)
+
 ## watershed polygon ####
 albers_wsd_polygon <- readRDS(here::here("data_fmt/epsg4326_watershed.rds")) %>%
-  st_make_valid() %>% 
   st_transform(crs = 5070) %>% 
+  st_buffer(dist = 0) %>% # make polygons valid; use projected CRS
+  mutate(within = st_within(., albers_mask_buffer, sparse = F)) %>% 
+  dplyr::filter(within == TRUE) %>% 
   dplyr::select(NULL) %>% 
   dplyr::mutate(wsd_id = seq_len(nrow(.)))
 
