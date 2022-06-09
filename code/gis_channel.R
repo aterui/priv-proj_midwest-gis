@@ -67,7 +67,8 @@ writeRaster(upa_merge,
             format = "GTiff",
             overwrite = TRUE)  
 
-## binary stream network, 1 sq km
+
+## binary stream network, 1 sq km -----------------------------------------
 ### extract grid streams
 whitebox::wbt_extract_streams(flow_accum = upa_name,
                               output = str_name,
@@ -95,7 +96,8 @@ v_str_1sqkm <- st_read(dsn = str_remove(v_str_name, "\\\\str.shp"),
 
 saveRDS(v_str_1sqkm, file = "data_fmt/epsg4326_channel_1sqkm.rds")
 
-## binary stream network, 5000 sq km
+
+## binary stream network, 5000 sq km --------------------------------------
 ### extract grid streams
 whitebox::wbt_extract_streams(flow_accum = upa_name,
                               output = str_name,
