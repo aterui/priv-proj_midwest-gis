@@ -8,7 +8,6 @@ source("code/library.R")
 # watershed delineation ---------------------------------------------------
 
 ## save input files to tempdir
-
 shp <- paste(tempdir(), "temp.shp", sep = "\\")
 tif <- sapply(1:2, function(i) paste0(tempdir(), "\\temp", i, ".tif"))
 
@@ -33,7 +32,6 @@ wgs84_wsd_polygon <- terra::rast(tif[2]) %>%
   st_make_valid()
 
 ## export
-
 saveRDS(wgs84_wsd_polygon,
         file = here::here("data_fmt/epsg4326_watershed.rds"))
 
@@ -61,7 +59,7 @@ albers_mask_buffer <- st_read(here::here("data_source/albers_huc2_zone4_7.gpkg")
 albers_wsd_polygon <- readRDS(here::here("data_fmt/epsg4326_watershed.rds")) %>%
   st_transform(crs = 5070) %>% 
   st_buffer(dist = 0) %>% # make polygons valid; use projected CRS
-  mutate(within = st_within(., albers_mask_buffer, sparse = F)) %>% 
+  mutate(within = st_within(., albers_mask_buffer, sparse = F)) %>% # pick watershed polygon that fully fall into the boundary polygon
   dplyr::filter(within == TRUE) %>% 
   dplyr::select(NULL) %>% 
   dplyr::mutate(wsd_id = seq_len(nrow(.)))
